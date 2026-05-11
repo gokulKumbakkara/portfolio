@@ -276,6 +276,7 @@
   </div>
 </template>
 
+<canvas id="mobile-bg"></canvas>
 <div id="mobile-view"></div>
 
 <!-- ============ MODULES ============ -->
@@ -326,9 +327,64 @@ if (!isMobile) {
     mobileView.appendChild(el);
   });
   initNexus(mobileView.querySelector('.nexus'));
+
+  // ---- mobile particle background ----
+  const mbc = document.getElementById('mobile-bg');
+  const ctx2 = mbc.getContext('2d');
+  function resizeMbc() { mbc.width = window.innerWidth; mbc.height = window.innerHeight; }
+  resizeMbc();
+  window.addEventListener('resize', resizeMbc);
+  const dots = Array.from({ length: 90 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 1.2 + 0.2,
+    vx: (Math.random() - 0.5) * 0.25,
+    vy: (Math.random() - 0.5) * 0.25,
+    acid: Math.random() < 0.12,
+  }));
+  (function drawMobileBg() {
+    ctx2.fillStyle = '#000';
+    ctx2.fillRect(0, 0, mbc.width, mbc.height);
+    dots.forEach(d => {
+      d.x = (d.x + d.vx + mbc.width) % mbc.width;
+      d.y = (d.y + d.vy + mbc.height) % mbc.height;
+      ctx2.fillStyle = d.acid ? 'rgba(197,251,58,0.55)' : 'rgba(200,198,190,0.3)';
+      ctx2.beginPath();
+      ctx2.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx2.fill();
+    });
+    requestAnimationFrame(drawMobileBg);
+  })();
+
+  // ---- scroll-driven panel entrance + skill bar animations ----
+  const panelObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const panel = entry.target;
+      panel.classList.add('in-view');
+      panel.querySelectorAll('.cell').forEach((c, i) => {
+        setTimeout(() => c.classList.add('bar-anim'), 120 + i * 70);
+      });
+      panelObserver.unobserve(panel);
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('#mobile-view .panel').forEach(p => panelObserver.observe(p));
+
+  // active nav highlight on scroll
+  const sections = WAYPOINTS.map(wp => document.getElementById('section-' + wp.id));
+  const navBtns = [...navEl.children];
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const idx = sections.indexOf(entry.target);
+      if (idx >= 0) navBtns.forEach((b, j) => b.classList.toggle('active', j === idx));
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => s && scrollObserver.observe(s));
 }
 
 // ----- nav bar -----
+let goTo = () => {}; // assigned in !isMobile block below
 const navEl = document.getElementById('nav');
 WAYPOINTS.forEach((wp, i) => {
   const b = document.createElement('button');
@@ -385,7 +441,7 @@ window.addEventListener('mousemove', e => {
   orbitTargetPitch = Math.max(-0.18, Math.min(0.18, orbitTargetPitch - dy * 0.0015));
 });
 
-function goTo(i) {
+goTo = function(i) {
   if (i < 0 || i >= WAYPOINTS.length) return;
   currentIdx = i;
   setActive(i);
@@ -396,7 +452,7 @@ function goTo(i) {
   tweenStart = performance.now();
   isTweening = true;
   orbitTargetYaw = 0; orbitTargetPitch = 0;
-}
+};
 let _lookAt = new THREE.Vector3();
 function getLookTarget() {
   // approximate current look-at point ~600 ahead
