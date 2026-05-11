@@ -613,11 +613,7 @@ body::after {
     cursor: default;
   }
 
-  #bg-canvas, #css3d, #telemetry, #controls, #compass { display: none !important; }
-
-  #brand { top: 10px; left: 12px; }
-  #brand .logo { font-size: 11px; }
-  #status { display: none; }
+  #bg-canvas, #css3d, #telemetry, #controls, #compass, #brand, #status { display: none !important; }
 
   #nav {
     top: 0;
@@ -627,19 +623,21 @@ body::after {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     border-left: none;
     border-right: none;
     border-top: none;
+    scrollbar-width: none;
   }
-  #nav button { padding: 10px 10px; font-size: 9px; white-space: nowrap; }
+  #nav::-webkit-scrollbar { display: none; }
+  #nav button { padding: 10px 10px; font-size: 9px; white-space: nowrap; flex-shrink: 0; }
   #nav button .idx { display: none; }
 
   #mobile-view {
-    display: block;
-    padding: 50px 14px 60px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 52px 14px 60px;
   }
 
   /* reset panel sizing for flat layout */

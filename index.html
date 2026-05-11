@@ -313,6 +313,11 @@ if (!isMobile) {
   });
   initNexus(panelEls.nexus);
 } else {
+  // dismiss boot on mobile
+  setTimeout(() => {
+    const b = document.getElementById('boot');
+    if (b) { b.classList.add('gone'); setTimeout(() => b.remove(), 700); }
+  }, 600);
   // flat mobile layout
   WAYPOINTS.forEach(wp => {
     const tpl = document.getElementById('t-' + wp.id);
@@ -332,7 +337,11 @@ WAYPOINTS.forEach((wp, i) => {
   b.addEventListener('click', () => {
     if (isMobile) {
       const sec = document.getElementById('section-' + wp.id);
-      if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      if (sec) {
+        const offset = navEl.offsetHeight + 8;
+        const top = sec.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
       [...navEl.children].forEach((btn, j) => btn.classList.toggle('active', j === i));
     } else {
       goTo(i);
@@ -398,20 +407,16 @@ function getLookTarget() {
   return _lookAt;
 }
 
-// scroll wheel — snap to neighbor
-let scrollAccum = 0;
-let scrollLast = 0;
+// scroll wheel — snap one node, lock until tween settles
+let scrollLocked = false;
 window.addEventListener('wheel', e => {
   if (e.target.closest('#chat, #chat-input')) return;
   e.preventDefault();
-  scrollAccum += e.deltaY;
-  const now = performance.now();
-  if (now - scrollLast > 240 && Math.abs(scrollAccum) > 80) {
-    if (scrollAccum > 0) goTo(Math.min(currentIdx + 1, WAYPOINTS.length - 1));
-    else goTo(Math.max(currentIdx - 1, 0));
-    scrollAccum = 0;
-    scrollLast = now;
-  }
+  if (scrollLocked) return;
+  if (e.deltaY > 0) goTo(Math.min(currentIdx + 1, WAYPOINTS.length - 1));
+  else if (e.deltaY < 0) goTo(Math.max(currentIdx - 1, 0));
+  scrollLocked = true;
+  setTimeout(() => { scrollLocked = false; }, tweenDur + 100);
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
