@@ -413,7 +413,12 @@ body::after {
   display: flex;
   flex-direction: column;
   min-height: 180px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.projects .card:hover { background: rgba(197,251,58,0.05); }
 .projects .card .id { font-size: 9px; color: var(--acid); letter-spacing: 0.2em; }
 .projects .card .ti { font-size: 18px; color: var(--fg); font-weight: 700; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.02em; }
 .projects .card .desc { font-size: 12px; line-height: 1.55; color: var(--mute); flex: 1; }
