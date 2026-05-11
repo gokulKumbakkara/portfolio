@@ -276,6 +276,8 @@
   </div>
 </template>
 
+<div id="mobile-view"></div>
+
 <!-- ============ MODULES ============ -->
 <script type="importmap">
 {
@@ -291,20 +293,35 @@ import * as THREE from 'three';
 import { buildScene, addPanel, WAYPOINTS } from './scene.js';
 import { initNexus } from './nexus.js';
 
+const isMobile = window.innerWidth < 768;
+const mobileView = document.getElementById('mobile-view');
+
 const bgCanvas = document.getElementById('bg-canvas');
 const css3dHost = document.getElementById('css3d');
-const { scene, camera, renderer, cssRenderer, props, points, glow } = buildScene(bgCanvas, css3dHost);
 
 // ----- spawn panels -----
 const panelEls = {};
-WAYPOINTS.forEach(wp => {
-  const tpl = document.getElementById('t-' + wp.id);
-  const el = tpl.content.firstElementChild.cloneNode(true);
-  panelEls[wp.id] = el;
-  addPanel(scene, el, wp.panel.pos, wp.panel.rot, 1);
-});
+let scene, camera, renderer, cssRenderer, props, points, glow;
 
-initNexus(panelEls.nexus);
+if (!isMobile) {
+  ({ scene, camera, renderer, cssRenderer, props, points, glow } = buildScene(bgCanvas, css3dHost));
+  WAYPOINTS.forEach(wp => {
+    const tpl = document.getElementById('t-' + wp.id);
+    const el = tpl.content.firstElementChild.cloneNode(true);
+    panelEls[wp.id] = el;
+    addPanel(scene, el, wp.panel.pos, wp.panel.rot, 1);
+  });
+  initNexus(panelEls.nexus);
+} else {
+  // flat mobile layout
+  WAYPOINTS.forEach(wp => {
+    const tpl = document.getElementById('t-' + wp.id);
+    const el = tpl.content.firstElementChild.cloneNode(true);
+    el.id = 'section-' + wp.id;
+    mobileView.appendChild(el);
+  });
+  initNexus(mobileView.querySelector('.nexus'));
+}
 
 // ----- nav bar -----
 const navEl = document.getElementById('nav');
@@ -312,14 +329,24 @@ WAYPOINTS.forEach((wp, i) => {
   const b = document.createElement('button');
   b.dataset.idx = i;
   b.innerHTML = `<span class="idx">${String(i).padStart(2, '0')}</span><span>${wp.label}</span>`;
-  b.addEventListener('click', () => goTo(i));
+  b.addEventListener('click', () => {
+    if (isMobile) {
+      const sec = document.getElementById('section-' + wp.id);
+      if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      [...navEl.children].forEach((btn, j) => btn.classList.toggle('active', j === i));
+    } else {
+      goTo(i);
+    }
+  });
   navEl.appendChild(b);
 });
 function setActive(i) {
   [...navEl.children].forEach((b, j) => b.classList.toggle('active', j === i));
-  document.getElementById('t-node').textContent = WAYPOINTS[i].label;
+  const tNode = document.getElementById('t-node');
+  if (tNode) tNode.textContent = WAYPOINTS[i].label;
 }
 
+if (!isMobile) {
 // ----- camera control -----
 let currentIdx = 0;
 let camFrom = new THREE.Vector3().fromArray(WAYPOINTS[0].cam);
@@ -370,8 +397,6 @@ function getLookTarget() {
   _lookAt.addScaledVector(d, 600);
   return _lookAt;
 }
-
-setActive(0);
 
 // scroll wheel — snap to neighbor
 let scrollAccum = 0;
@@ -549,6 +574,25 @@ setInterval(() => {
   const d = new Date();
   tclk.textContent = d.toISOString().slice(11, 19);
 }, 1000);
+
+// touch swipe for 3D navigation
+let touchStartX = 0, touchStartY = 0;
+window.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+window.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 50) {
+    if (dy < 0) goTo(Math.min(currentIdx + 1, WAYPOINTS.length - 1));
+    else goTo(Math.max(currentIdx - 1, 0));
+  }
+}, { passive: true });
+
+} // end !isMobile
+
+setActive(0);
 </script>
 
 </body>

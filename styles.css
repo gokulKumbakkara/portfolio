@@ -243,7 +243,15 @@ body::after {
 .panel-head .tag { color: var(--acid); }
 .panel-head .id { color: var(--fg); }
 
-.panel-body { padding: 22px 26px; }
+.panel-body {
+  padding: 22px 26px;
+  overflow-y: auto;
+  max-height: 62vh;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--line); }
 
 /* ----- HERO ----- */
 .panel.hero { width: 900px; }
@@ -592,4 +600,85 @@ body::after {
   font-size: 9px;
   color: var(--mute);
   letter-spacing: 0.14em;
+}
+
+/* ================ MOBILE VIEW ================ */
+#mobile-view { display: none; }
+
+@media (max-width: 767px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  #bg-canvas, #css3d, #telemetry, #controls, #compass { display: none !important; }
+
+  #brand { top: 10px; left: 12px; }
+  #brand .logo { font-size: 11px; }
+  #status { display: none; }
+
+  #nav {
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+  #nav button { padding: 10px 10px; font-size: 9px; white-space: nowrap; }
+  #nav button .idx { display: none; }
+
+  #mobile-view {
+    display: block;
+    padding: 50px 14px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* reset panel sizing for flat layout */
+  #mobile-view .panel {
+    width: 100% !important;
+  }
+  #mobile-view .panel-body {
+    max-height: none;
+    overflow-y: visible;
+    padding: 16px 14px;
+  }
+
+  /* hero */
+  #mobile-view .hero .name { font-size: 32px; line-height: 0.9; }
+  #mobile-view .hero .ascii { display: none; }
+  #mobile-view .hero .meta { grid-template-columns: repeat(2, 1fr); }
+  #mobile-view .hero .role { font-size: 11px; letter-spacing: 0.18em; }
+
+  /* about */
+  #mobile-view .about p { font-size: 13px; }
+  #mobile-view .about .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* experience */
+  #mobile-view .experience .item { grid-template-columns: 1fr; gap: 6px; }
+  #mobile-view .experience .item .tag { display: none; }
+
+  /* skills */
+  #mobile-view .skills .grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* projects */
+  #mobile-view .projects .grid { grid-template-columns: 1fr; }
+
+  /* contact */
+  #mobile-view .contact .lead { font-size: 18px; }
+  #mobile-view .contact .links { grid-template-columns: 1fr; }
+
+  /* nexus chat */
+  #mobile-view .nexus #chat { height: 200px; }
+  #mobile-view .nexus .h-stats { display: none; }
+  #mobile-view .nexus .suggestions { gap: 4px; }
+  #mobile-view .nexus .suggestions .s { font-size: 9px; }
 }
